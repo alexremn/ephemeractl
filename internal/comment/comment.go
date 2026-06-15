@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/google/go-github/v66/github"
@@ -19,18 +20,37 @@ type Poster struct {
 }
 
 // NewPoster builds a Poster authenticated with token for owner/repo#number.
+//
+// It honors $GITHUB_API_URL, which GitHub Actions always sets: on github.com it
+// is https://api.github.com (the client default), and on GitHub Enterprise
+// Server it is https://<host>/api/v3 — so the same Action works on GHES.
 func NewPoster(token, owner, repo string, number int) *Poster {
+	gh := github.NewClient(nil).WithAuthToken(token)
+	if api := os.Getenv("GITHUB_API_URL"); api != "" {
+		if u, err := url.Parse(ensureTrailingSlash(api)); err == nil {
+			gh.BaseURL = u
+		}
+	}
 	return &Poster{
-		gh:     github.NewClient(nil).WithAuthToken(token),
+		gh:     gh,
 		owner:  owner,
 		repo:   repo,
 		number: number,
 	}
 }
 
+// ensureTrailingSlash returns s with a single trailing slash; go-github requires
+// BaseURL to end in "/" so request paths resolve correctly.
+func ensureTrailingSlash(s string) string {
+	if strings.HasSuffix(s, "/") {
+		return s
+	}
+	return s + "/"
+}
+
 // setBaseURL points the client at an alternate API root (used in tests).
 func (p *Poster) setBaseURL(base string) error {
-	u, err := url.Parse(base)
+	u, err := url.Parse(ensureTrailingSlash(base))
 	if err != nil {
 		return err
 	}
