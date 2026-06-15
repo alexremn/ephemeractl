@@ -1,0 +1,144 @@
+# ephemeractl — example ArgoCD ApplicationSet (Pull Request generator, GitHub)
+#
+# What this does: for every open PR on your-org/your-app, ArgoCD renders one preview
+# Application. ephemeractl then reads OpenCost for that PR's workloads and posts the
+# actual running cost on the PR.
+#
+# ┌──────────────────────────────────────────────────────────────────────────────┐
+# │ THE ONE THING THAT MATTERS FOR ephemeractl                                     │
+# │                                                                                │
+# │ The PR number MUST end up as a label on the POD TEMPLATE of every workload:    │
+# │                                                                                │
+# │     spec.template.metadata.labels:                                             │
+# │       ephemeractl.dev/pr: "<PR number>"      # e.g. "1234"                      │
+# │                                                                                │
+# │ Labels on the Application, the namespace, or the Deployment's top-level        │
+# │ metadata are NOT enough. OpenCost attributes cost from the running POD. A       │
+# │ Deployment whose pods do not carry ephemeractl.dev/pr is invisible to the      │
+# │ label selector and its spend lands in __unallocated__.                         │
+# │                                                                                │
+# │ This file pushes the PR number DOWN into your app's chart/overlay. Your chart  │
+# │ or overlay is then responsible for stamping it onto spec.template.metadata.    │
+# │ labels — see the per-strategy notes below.                                     │
+# └──────────────────────────────────────────────────────────────────────────────┘
+#
+# Docs: https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: previews
+  namespace: argocd
+spec:
+  # goTemplate is required to use the {{ .number }} / {{ .branch_slug }} style params
+  # below. With goTemplate enabled, ApplicationSet also gives you sprig functions
+  # (e.g. quote) if you need them.
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - pullRequest:
+        github:
+          # GitHub owner and repository the PRs live in.
+          owner: your-org
+          repo: your-app
+          # Token for the GitHub API (read-only is fine: this generator only LISTS PRs).
+          # Create the Secret separately; this just references it.
+          tokenRef:
+            secretName: github-token
+            key: token
+          # Optional: only build previews for PRs carrying this label.
+          # labels:
+          #   - preview
+        # How often ArgoCD re-lists PRs to add/remove previews. 30s is a sane default;
+        # raise it to avoid GitHub API rate limits on busy repos.
+        requeueAfterSeconds: 30
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # PR generator template params (GitHub). These are the ONLY ones available — do not
+  # invent others:
+  #   {{ .number }}         PR number (integer)            → use this as the label value
+  #   {{ .branch }}         source branch, raw
+  #   {{ .branch_slug }}    source branch, DNS-safe slug   → use this in resource names
+  #   {{ .target_branch }}  base branch (NOT .base_branch)
+  #   {{ .head_sha }}       full head commit SHA
+  #   {{ .head_short_sha }} short (7-char) head SHA        → handy for image tags
+  #   {{ .author }}         PR author login
+  # There is NO {{ .url }} and NO {{ .base_branch }}. The base branch is .target_branch.
+  # ───────────────────────────────────────────────────────────────────────────────
+  template:
+    metadata:
+      # Application name. branch_slug keeps it DNS-safe; the PR number keeps it unique
+      # and stable across force-pushes.
+      name: "preview-pr-{{ .number }}"
+      # Labels HERE are on the Application object only. They make previews easy to find
+      # in the ArgoCD UI / kubectl, and they are what kube-janitor / a TTL controller
+      # key off for teardown. They are NOT seen by OpenCost — see the banner at the top.
+      labels:
+        ephemeractl.dev/pr: "{{ .number }}"
+        ephemeractl.dev/preview: "true"
+        ephemeractl.dev/head-sha: "{{ .head_short_sha }}"
+    spec:
+      project: previews
+      source:
+        repoURL: https://github.com/your-org/your-app.git
+        targetRevision: "{{ .head_sha }}"
+        path: deploy/chart
+
+        # ── Strategy A: Helm chart (shown active) ──────────────────────────────────
+        # Pass the PR number into the chart. Your chart's Deployment template MUST then
+        # apply it to spec.template.metadata.labels — NOT just metadata.labels — e.g.:
+        #
+        #   # deploy/chart/templates/deployment.yaml
+        #   spec:
+        #     template:
+        #       metadata:
+        #         labels:
+        #           ephemeractl.dev/pr: {{ .Values.ephemeractl.pr | quote }}
+        #
+        # Quoting matters: the PR number is an integer here but Kubernetes label values
+        # MUST be strings. Stamp it on EVERY workload kind that runs pods (Deployment,
+        # StatefulSet, CronJob jobTemplate, etc.) or that workload's spend is unallocated.
+        helm:
+          parameters:
+            - name: ephemeractl.pr
+              value: "{{ .number }}"
+            - name: image.tag
+              value: "{{ .head_short_sha }}"
+          # Alternatively, Helm's built-in commonLabels-style values if your chart
+          # threads a map onto every pod template:
+          # values: |
+          #   podLabels:
+          #     ephemeractl.dev/pr: "{{ .number }}"
+
+        # ── Strategy B: Kustomize (alternative — uncomment, remove the helm block) ──
+        # kustomize commonLabels is the cleanest path: it stamps the label onto
+        # selectors AND every pod template it manages, in one place. Prefer it over
+        # commonAnnotations (annotations are NOT cost-attributable in OpenCost).
+        #
+        # kustomize:
+        #   commonLabels:
+        #     ephemeractl.dev/pr: "{{ .number }}"
+        #   images:
+        #     - your-org/your-app:{{ .head_short_sha }}
+        #
+        # NOTE: kustomize commonLabels also becomes part of the selector, which is
+        # immutable on existing Deployments. For ephemeral per-PR previews that are
+        # created and destroyed fresh, this is exactly what you want.
+
+      destination:
+        server: https://kubernetes.default.svc
+        # One namespace per PR. The default ephemeractl selector is the LABEL, so this
+        # naming is for isolation/teardown — not for cost attribution. If you instead
+        # run the Action with namespace-pattern: "preview-pr-{pr}", this name is what it
+        # resolves against, but the pod-template label remains the more robust selector.
+        namespace: "preview-pr-{{ .number }}"
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          # Create the per-PR namespace on first sync.
+          - CreateNamespace=true

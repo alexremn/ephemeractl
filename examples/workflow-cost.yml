@@ -1,0 +1,52 @@
+# ephemeractl — post the actual running cost of a PR's preview environment on the PR.
+#
+# Copy this into your repo as .github/workflows/ephemeractl-cost.yml and adjust the
+# `with:` inputs (and the `your-org/ephemeractl@v1` ref) to match your setup.
+#
+# What it does:
+#   On every push to an open PR, ephemeractl queries OpenCost for the workloads
+#   labeled with this PR's number and upserts a single sticky comment showing the
+#   actual spend so far (an approximate lower bound — see docs/USAGE.md).
+#
+# Required permissions:
+#   - pull-requests: write   — needed to create/edit the sticky cost comment.
+#     The default GITHUB_TOKEN is sufficient on same-repo PRs.
+#
+# Runner requirement (READ THIS):
+#   This workflow uses a SELF-HOSTED runner because the runner must reach the
+#   in-cluster OpenCost API at port 9003 (the default `opencost-url` resolves the
+#   in-cluster Service: http://opencost.opencost.svc.cluster.local:9003). A
+#   self-hosted runner in or near the cluster is the normal setup for the target
+#   user. If you instead expose OpenCost through an ingress/tunnel, you can run on
+#   a hosted runner and set `opencost-url` to that external URL.
+#
+# Fork-PR limitation:
+#   On `pull_request` events from a FORK, GITHUB_TOKEN is read-only and secrets are
+#   withheld, so the Action cannot post the comment. This is a documented v1
+#   limitation. The secure way to support fork PRs is the two-workflow
+#   `workflow_run` pattern — see docs/USAGE.md.
+
+name: ephemeractl cost on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  cost:
+    # Self-hosted so the runner can reach the in-cluster OpenCost API on :9003.
+    # Swap for a hosted runner only if `opencost-url` points at an ingress/tunnel.
+    runs-on: [self-hosted]
+    steps:
+      - name: Post preview-environment cost
+        uses: your-org/ephemeractl@v1
+        with:
+          opencost-url: http://opencost.opencost.svc.cluster.local:9003
+          pr-label-key: ephemeractl.dev/pr
+          # team-label is optional: omit it (empty default) for a single total
+          # instead of a per-team breakdown.
+          team-label: team
+          window: pr-open

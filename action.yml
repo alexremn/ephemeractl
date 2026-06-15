@@ -1,0 +1,86 @@
+# ephemeractl — GitHub Action metadata.
+#
+# Inputs are passed to the container as INPUT_* environment variables
+# (e.g. `opencost-url` → INPUT_OPENCOST-URL). The binary reads these,
+# parses the PR context from $GITHUB_EVENT_PATH, queries OpenCost, and
+# upserts the sticky cost comment.
+#
+# Outputs (total-cost, currency, comment-url) are written by the binary
+# to the $GITHUB_OUTPUT file.
+#
+# Caller workflow needs `permissions: pull-requests: write`. Note: on
+# pull_request from a fork, GITHUB_TOKEN is read-only with no secrets,
+# so the Action cannot comment — see docs for the workflow_run upgrade path.
+
+name: ephemeractl
+description: Actual running cost of every PR's preview environment, posted on the PR.
+author: your-org
+
+branding:
+  icon: dollar-sign
+  color: green
+
+inputs:
+  opencost-url:
+    description: >-
+      OpenCost API base URL (port 9003 is the API). Defaults to the in-cluster
+      Service; override with an ingress/tunnel URL when running on hosted runners.
+    required: false
+    default: http://opencost.opencost.svc.cluster.local:9003
+  pr-label-key:
+    description: >-
+      Pod-template label key carrying the PR number (label-selector mode, the
+      default and most robust selector). Must sit on spec.template.metadata.labels.
+    required: false
+    default: ephemeractl.dev/pr
+  namespace-pattern:
+    description: >-
+      Alternative selector mapping PR to namespace, e.g. `preview-pr-{pr}`.
+      When set, overrides label-selector mode. Empty by default.
+    required: false
+    default: ""
+  window:
+    description: >-
+      Cost window. `pr-open` resolves to created_at→now (lifetime spend), or pass
+      any native OpenCost window (`7d`, `today`, `lastweek`, an RFC3339/unix pair).
+    required: false
+    default: pr-open
+  team-label:
+    description: >-
+      Label key to break cost down by team. Empty by default → single rolled-up
+      total; set (e.g. `team`) to emit a per-team breakdown table.
+    required: false
+    default: ""
+  idle-mode:
+    description: >-
+      Idle/shared-cost inclusion policy: `used-only` (default) or `include-idle`.
+      A deliberate policy choice — bare OpenCost has no shareNamespaces/shareCost knobs.
+    required: false
+    default: used-only
+  opencost-resolution:
+    description: >-
+      OpenCost query resolution. Very short-lived pods can be under-sampled at 1m.
+    required: false
+    default: 1m
+  currency:
+    description: >-
+      Display currency symbol/code only — OpenCost returns plain numbers, no conversion.
+    required: false
+    default: USD
+  github-token:
+    description: >-
+      Token used to upsert the sticky PR comment. Requires pull-requests: write.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  total-cost:
+    description: Summed actual cost for the PR's preview environment over the window (number).
+  currency:
+    description: Currency symbol/code the figure is reported in (echoes the `currency` input).
+  comment-url:
+    description: URL of the sticky cost-report comment that was created or updated.
+
+runs:
+  using: docker
+  image: docker://ghcr.io/your-org/ephemeractl:v1
