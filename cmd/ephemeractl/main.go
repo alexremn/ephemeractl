@@ -36,6 +36,13 @@ func run() int {
 		return 1
 	}
 
+	// Only break cost down by team when a team-label was configured; otherwise
+	// OpenCost aggregates by namespace and a "By team" table would be misleading.
+	var groups []opencost.Group
+	if cfg.TeamLabel != "" {
+		groups = res.Groups
+	}
+
 	body := render.Markdown(render.Report{
 		PRNumber:   cfg.PRNumber,
 		Total:      res.Total,
@@ -43,7 +50,7 @@ func run() int {
 		Window:     cfg.Window,
 		IdleMode:   cfg.IdleMode,
 		Components: res.Components,
-		Groups:     res.Groups,
+		Groups:     groups,
 	})
 
 	url, err := comment.NewPoster(cfg.GitHubToken, cfg.Owner, cfg.Repo, cfg.PRNumber).

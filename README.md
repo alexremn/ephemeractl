@@ -17,32 +17,27 @@ Kubernetes preview environment, then posts and keeps updating a single sticky co
 
 ```markdown
 <!-- ephemeractl:cost-report -->
-### 💸 Preview environment cost — PR #482
+### Preview environment cost — PR #482
 
-**Total: $4.17 USD** (window: pr-open · idle-mode: used-only)
+**Total: USD 4.17** (window: pr-open · idle-mode: used-only)
 
-| Component       | Cost (USD) |
-|-----------------|-----------:|
-| CPU             |      $1.42 |
-| RAM             |      $0.88 |
-| GPU             |      $0.00 |
-| Network         |      $0.00 |
-| Load balancer   |      $0.61 |
-| Persistent vols |      $1.04 |
-| Shared          |      $0.22 |
-| **Total**       |  **$4.17** |
+| Resource | Cost |
+|---|--:|
+| CPU | USD 2.10 |
+| Memory | USD 1.20 |
+| Network | USD 0.30 |
+| Load balancer | USD 0.25 |
+| Storage (PV) | USD 0.32 |
+| **Total** | **USD 4.17** |
 
-| Team      | Cost (USD) |
-|-----------|-----------:|
-| checkout  |      $2.93 |
-| platform  |      $1.24 |
+**By team**
 
-Window: `2026-06-12T09:14:03Z → 2026-06-15T21:24:00Z` · resolution `1m`
+| Team | Cost |
+|---|--:|
+| checkout | USD 2.50 |
+| payments | USD 1.67 |
 
-> Approximate **lower bound**. OpenCost on-demand list rates only — no spot/RI/committed-use
-> reconciliation. Network egress counts as 0 unless the egress DaemonSet is enabled.
-> Leaked/unmounted PVs and some load-balancer cost may be undercounted. Treat this as a
-> trustworthy *relative* signal and trend, not invoice reconciliation.
+> 💸 Approximate **lower bound** from OpenCost on-demand list rates — excludes spot/RI/committed-use discounts; network egress is 0 unless the egress DaemonSet is enabled; leaked/unmounted PV and some load-balancer cost may be undercounted. Use for relative signal and trend, not invoice reconciliation.
 ```
 
 The first line is the HTML marker `<!-- ephemeractl:cost-report -->`. ephemeractl finds it to
