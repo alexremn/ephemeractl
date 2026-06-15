@@ -72,8 +72,8 @@ func TestFetchBuildsQueryAndReducesResult(t *testing.T) {
 	}
 
 	// Reduction: 1.0+0.5+0.25 (frontend) + 2.0+0.1 (backend) = 3.85
-	if res.Total < 3.84 || res.Total > 3.86 {
-		t.Errorf("Total = %v, want ~3.85", res.Total)
+	if math.Abs(res.Total-3.85) > 1e-9 {
+		t.Errorf("Total = %v, want 3.85", res.Total)
 	}
 	if len(res.Groups) != 2 {
 		t.Fatalf("len(Groups) = %d, want 2", len(res.Groups))

@@ -75,18 +75,24 @@ type Query struct {
 	IncludeIdle bool
 }
 
+// allocationPath is the OpenCost Allocation API endpoint path.
+const allocationPath = "/allocation"
+
+// idleKey is the sentinel name OpenCost uses for the idle allocation bucket.
+const idleKey = "__idle__"
+
 // Client talks to one OpenCost Allocation API.
 type Client struct {
-	baseURL string
-	http    *http.Client
+	baseURL    string
+	httpClient *http.Client
 }
 
 // New returns a Client for the given OpenCost base URL (e.g.
 // http://opencost.opencost.svc.cluster.local:9003).
 func New(baseURL string) *Client {
 	return &Client{
-		baseURL: strings.TrimRight(baseURL, "/"),
-		http:    &http.Client{Timeout: 30 * time.Second},
+		baseURL:    strings.TrimRight(baseURL, "/"),
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
@@ -118,12 +124,12 @@ func (c *Client) Fetch(ctx context.Context, q Query) (Result, error) {
 		qs.Set("shareIdle", "true")
 	}
 
-	endpoint := c.baseURL + "/allocation?" + qs.Encode()
+	endpoint := c.baseURL + allocationPath + "?" + qs.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return Result{}, fmt.Errorf("build request: %w", err)
 	}
-	resp, err := c.http.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return Result{}, fmt.Errorf("reach OpenCost at %s: %w", c.baseURL, err)
 	}
@@ -146,7 +152,7 @@ func reduce(ar apiResponse) Result {
 		return res
 	}
 	for name, a := range ar.Data[0] {
-		if name == "__idle__" {
+		if name == idleKey {
 			continue // idle is shared into groups when requested; never its own group
 		}
 		cost := a.Total()
