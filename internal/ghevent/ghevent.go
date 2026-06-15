@@ -3,6 +3,8 @@
 package ghevent
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 )
@@ -48,4 +50,45 @@ func loadInputs() Config {
 		Currency:         input("CURRENCY", "USD"),
 		GitHubToken:      input("GITHUB-TOKEN", ""),
 	}
+}
+
+// eventPayload is the subset of a pull_request event we read.
+type eventPayload struct {
+	PullRequest *struct {
+		Number    int       `json:"number"`
+		CreatedAt time.Time `json:"created_at"`
+	} `json:"pull_request"`
+	Repository struct {
+		Name  string `json:"name"`
+		Owner struct {
+			Login string `json:"login"`
+		} `json:"owner"`
+	} `json:"repository"`
+}
+
+// Load returns the full Config: env inputs plus PR identity read from
+// $GITHUB_EVENT_PATH. It errors if the event is missing or is not a PR event.
+func Load() (Config, error) {
+	c := loadInputs()
+
+	path := os.Getenv("GITHUB_EVENT_PATH")
+	if path == "" {
+		return c, fmt.Errorf("GITHUB_EVENT_PATH is not set; the Action must run on a pull_request event")
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return c, fmt.Errorf("read event payload %q: %w", path, err)
+	}
+	var ev eventPayload
+	if err := json.Unmarshal(raw, &ev); err != nil {
+		return c, fmt.Errorf("parse event payload: %w", err)
+	}
+	if ev.PullRequest == nil {
+		return c, fmt.Errorf("event payload has no pull_request; ephemeractl runs on pull_request events")
+	}
+	c.Owner = ev.Repository.Owner.Login
+	c.Repo = ev.Repository.Name
+	c.PRNumber = ev.PullRequest.Number
+	c.PRCreatedAt = ev.PullRequest.CreatedAt
+	return c, nil
 }

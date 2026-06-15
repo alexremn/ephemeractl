@@ -1,6 +1,11 @@
 package ghevent
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
 
 func TestLoadInputsAppliesDefaults(t *testing.T) {
 	t.Setenv("INPUT_OPENCOST-URL", "http://opencost.opencost.svc.cluster.local:9003")
@@ -44,5 +49,46 @@ func TestLoadInputsOverrides(t *testing.T) {
 		c.Window != "7d" || c.TeamLabel != "team" || c.IdleMode != "include-idle" ||
 		c.Currency != "EUR" {
 		t.Errorf("overrides not applied: %+v", c)
+	}
+}
+
+func TestLoadParsesEvent(t *testing.T) {
+	dir := t.TempDir()
+	eventPath := filepath.Join(dir, "event.json")
+	payload := `{
+	  "pull_request": { "number": 482, "created_at": "2026-06-01T10:00:00Z" },
+	  "repository": { "name": "checkout", "owner": { "login": "acme" } }
+	}`
+	if err := os.WriteFile(eventPath, []byte(payload), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GITHUB_EVENT_PATH", eventPath)
+	t.Setenv("INPUT_OPENCOST-URL", "http://oc:9003")
+	t.Setenv("INPUT_GITHUB-TOKEN", "tok")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error: %v", err)
+	}
+	if c.Owner != "acme" || c.Repo != "checkout" || c.PRNumber != 482 {
+		t.Errorf("event fields wrong: owner=%q repo=%q pr=%d", c.Owner, c.Repo, c.PRNumber)
+	}
+	want := time.Date(2026, 6, 1, 10, 0, 0, 0, time.UTC)
+	if !c.PRCreatedAt.Equal(want) {
+		t.Errorf("PRCreatedAt = %v, want %v", c.PRCreatedAt, want)
+	}
+}
+
+func TestLoadErrorsWithoutPR(t *testing.T) {
+	dir := t.TempDir()
+	eventPath := filepath.Join(dir, "event.json")
+	if err := os.WriteFile(eventPath, []byte(`{"repository":{"name":"x","owner":{"login":"y"}}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GITHUB_EVENT_PATH", eventPath)
+	t.Setenv("INPUT_OPENCOST-URL", "http://oc:9003")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected error when event has no pull_request, got nil")
 	}
 }
