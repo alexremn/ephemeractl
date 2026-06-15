@@ -1,0 +1,22 @@
+<!-- ephemeractl:cost-report -->
+### Preview environment cost — PR #482
+
+**Total: USD 4.17** (window: pr-open · idle-mode: used-only)
+
+| Resource | Cost |
+|---|--:|
+| CPU | USD 2.10 |
+| Memory | USD 1.20 |
+| Network | USD 0.30 |
+| Load balancer | USD 0.25 |
+| Storage (PV) | USD 0.32 |
+| **Total** | **USD 4.17** |
+
+**By team**
+
+| Team | Cost |
+|---|--:|
+| checkout | USD 2.50 |
+| payments | USD 1.67 |
+
+> 💸 Approximate **lower bound** from OpenCost on-demand list rates — excludes spot/RI/committed-use discounts; network egress is 0 unless the egress DaemonSet is enabled; leaked/unmounted PV and some load-balancer cost may be undercounted. Use for relative signal and trend, not invoice reconciliation.

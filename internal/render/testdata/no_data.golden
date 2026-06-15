@@ -1,0 +1,7 @@
+<!-- ephemeractl:cost-report -->
+### Preview environment cost — PR #9
+
+No cost data found for this PR yet (window: pr-open).
+If the environment is running, check that its pods carry the PR label on the pod template — see the troubleshooting section of `docs/USAGE.md`.
+
+> 💸 Approximate **lower bound** from OpenCost on-demand list rates — excludes spot/RI/committed-use discounts; network egress is 0 unless the egress DaemonSet is enabled; leaked/unmounted PV and some load-balancer cost may be undercounted. Use for relative signal and trend, not invoice reconciliation.
