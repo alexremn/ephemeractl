@@ -81,3 +81,49 @@ func TestUpsertEditsExistingMarkerComment(t *testing.T) {
 		t.Errorf("comment url = %q", url)
 	}
 }
+
+func TestUpsertErrorsWhenListCommentsFails(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	_, err := newTestPoster(t, srv.URL).Upsert(context.Background(), marker, marker+"\nbody")
+	if err == nil {
+		t.Fatal("expected error when ListComments returns 500, got nil")
+	}
+	if !strings.Contains(err.Error(), "list PR comments") {
+		t.Errorf("error message = %q, want it to contain 'list PR comments'", err.Error())
+	}
+}
+
+func TestUpsertErrorsWhenCreateCommentFails(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/issues/482/comments"):
+			_, _ = w.Write([]byte(`[]`)) // no existing comments
+		case r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/issues/482/comments"):
+			w.WriteHeader(http.StatusForbidden)
+		default:
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	_, err := newTestPoster(t, srv.URL).Upsert(context.Background(), marker, marker+"\nbody")
+	if err == nil {
+		t.Fatal("expected error when CreateComment returns 403, got nil")
+	}
+	if !strings.Contains(err.Error(), "create sticky comment") {
+		t.Errorf("error message = %q, want it to contain 'create sticky comment'", err.Error())
+	}
+}
+
+func TestSetBaseURLRejectsInvalidURL(t *testing.T) {
+	p := NewPoster("tok", "acme", "repo", 1)
+	// A URL with a control character is invalid and url.Parse returns an error.
+	err := p.setBaseURL("http://host\x00/")
+	if err == nil {
+		t.Fatal("expected error for invalid URL, got nil")
+	}
+}
