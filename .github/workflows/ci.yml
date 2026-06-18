@@ -1,4 +1,4 @@
-# Activates once the Go implementation lands (cmd/, internal/, go.mod).
+# Build, vet, lint, and race-test the Go module on every push to main and on PRs.
 name: CI
 
 on:
@@ -32,7 +32,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64.5
 
       - name: Test (race + coverage)
         run: go test -race -coverprofile=coverage.out ./...

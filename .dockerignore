@@ -5,3 +5,8 @@ examples
 .github
 dist
 coverage.out
+*.out
+# local build artifacts (the binary built by `go build` in the repo root)
+ephemeractl
+*.exe
+*.test

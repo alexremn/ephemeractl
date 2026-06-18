@@ -1,4 +1,4 @@
-# Activates once the Go implementation lands (cmd/, internal/, go.mod).
+# Builds and publishes the Docker action image to GHCR and cuts a GitHub release on a v* tag.
 name: Release
 
 on:
@@ -9,6 +9,8 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write     # build provenance attestation
+  attestations: write # SBOM / provenance attestation
 
 env:
   IMAGE: ghcr.io/alexremn/ephemeractl
@@ -46,9 +48,22 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
+          provenance: true
+          sbom: true
           tags: ${{ steps.tags.outputs.tags }}
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
+
+      # Make `uses: alexremn/ephemeractl@v1` resolve by moving the major git tag
+      # to this release commit. Skipped for pre-releases (e.g. v1.2.0-rc1).
+      - name: Update moving major git tag
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          MAJOR="${GITHUB_REF_NAME%%.*}"   # v1.2.3 -> v1
+          git tag -f "$MAJOR" "$GITHUB_SHA"
+          git push origin "$MAJOR" --force
