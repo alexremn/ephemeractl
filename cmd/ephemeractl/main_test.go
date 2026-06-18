@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/ephemeractl/internal/ghevent"
-	"github.com/your-org/ephemeractl/internal/opencost"
+	"github.com/alexremn/ephemeractl/internal/ghevent"
+	"github.com/alexremn/ephemeractl/internal/opencost"
 )
 
 func TestResolveWindowPROpen(t *testing.T) {

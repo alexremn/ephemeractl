@@ -84,7 +84,7 @@ marker logic, so a PR never accumulates duplicate cost comments.
 ## Why a Docker action with a prebuilt image
 
 The Action is published as `runs.using: docker` with
-`image: docker://ghcr.io/your-org/ephemeractl:<tag>` — a prebuilt image rather than
+`image: docker://ghcr.io/alexremn/ephemeractl:<tag>` — a prebuilt image rather than
 a Dockerfile built at runtime.
 
 - **Fast start.** A prebuilt, pinned image is pulled and run directly; the workflow
@@ -94,10 +94,10 @@ a Dockerfile built at runtime.
   This matters because the target deployment is a **self-hosted runner in or near the
   cluster** (so the in-cluster OpenCost Service URL resolves) — the image is the unit
   of distribution there.
-- **Reproducibility.** Pinning the image tag (and the `your-org/ephemeractl@v1`
+- **Reproducibility.** Pinning the image tag (and the `alexremn/ephemeractl@v1`
   action ref) gives callers a stable, auditable artifact.
 
-The image and the `your-org` owner placeholder are documented for replacement in the
+The image and the `alexremn` owner placeholder are documented for replacement in the
 repository README and USAGE docs.
 
 ## Fork-PR limitation (documented, not solved in v1)

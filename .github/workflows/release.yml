@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE: ghcr.io/your-org/ephemeractl
+  IMAGE: ghcr.io/alexremn/ephemeractl
 
 jobs:
   release:

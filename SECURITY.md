@@ -7,8 +7,8 @@ project's security posture.
 
 ## Supported versions
 
-ephemeractl is distributed as a versioned Docker action (`your-org/ephemeractl@v1`,
-image `ghcr.io/your-org/ephemeractl`). Security fixes land on the latest minor of
+ephemeractl is distributed as a versioned Docker action (`alexremn/ephemeractl@v1`,
+image `ghcr.io/alexremn/ephemeractl`). Security fixes land on the latest minor of
 the current major and are published as a new patch tag; the `v1` moving tag is
 advanced to point at it.
 
@@ -118,7 +118,7 @@ Protect it accordingly:
 
 For stronger guarantees, pin the action and image to an immutable reference (a
 specific `vX.Y.Z` tag or a digest) rather than a moving major tag. Released images
-are published to `ghcr.io/your-org/ephemeractl`.
+are published to `ghcr.io/alexremn/ephemeractl`.
 
 ## Scope
 

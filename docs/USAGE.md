@@ -84,7 +84,7 @@ jobs:
   cost:
     runs-on: [self-hosted]   # a runner that can reach the OpenCost API (see Prerequisites)
     steps:
-      - uses: your-org/ephemeractl@v1
+      - uses: alexremn/ephemeractl@v1
         with:
           opencost-url: http://opencost.opencost.svc.cluster.local:9003
           pr-label-key: ephemeractl.dev/pr

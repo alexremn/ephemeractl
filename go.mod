@@ -1,4 +1,4 @@
-module github.com/your-org/ephemeractl
+module github.com/alexremn/ephemeractl
 
 go 1.22
 

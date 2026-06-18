@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/your-org/ephemeractl/internal/opencost"
+	"github.com/alexremn/ephemeractl/internal/opencost"
 )
 
 var update = flag.Bool("update", false, "update golden files")

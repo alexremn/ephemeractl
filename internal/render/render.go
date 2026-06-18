@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/your-org/ephemeractl/internal/opencost"
+	"github.com/alexremn/ephemeractl/internal/opencost"
 )
 
 // Marker is the hidden HTML comment that identifies ephemeractl's comment so

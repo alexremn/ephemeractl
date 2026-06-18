@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-org/ephemeractl/internal/comment"
-	"github.com/your-org/ephemeractl/internal/ghevent"
-	"github.com/your-org/ephemeractl/internal/opencost"
-	"github.com/your-org/ephemeractl/internal/render"
+	"github.com/alexremn/ephemeractl/internal/comment"
+	"github.com/alexremn/ephemeractl/internal/ghevent"
+	"github.com/alexremn/ephemeractl/internal/opencost"
+	"github.com/alexremn/ephemeractl/internal/render"
 )
 
 func main() {

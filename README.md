@@ -6,9 +6,6 @@
 [![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8.svg)](https://go.dev)
 [![status: v1](https://img.shields.io/badge/status-v1%20%C2%B7%20validate--first-brightgreen.svg)](docs/ROADMAP.md)
 
-> **`your-org` is a placeholder.** Replace it with your GitHub org/owner everywhere it
-> appears (action ref, container image, examples) before using ephemeractl.
-
 ## What it does
 
 ephemeractl is a self-hostable **GitHub Action**. On a pull request it queries
@@ -89,7 +86,7 @@ jobs:
   cost:
     runs-on: [self-hosted]   # must reach the OpenCost API
     steps:
-      - uses: your-org/ephemeractl@v1
+      - uses: alexremn/ephemeractl@v1
         with:
           # opencost-url defaults to the in-cluster Service; override for ingress/tunnel.
           pr-label-key: ephemeractl.dev/pr

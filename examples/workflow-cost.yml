@@ -1,7 +1,7 @@
 # ephemeractl — post the actual running cost of a PR's preview environment on the PR.
 #
 # Copy this into your repo as .github/workflows/ephemeractl-cost.yml and adjust the
-# `with:` inputs (and the `your-org/ephemeractl@v1` ref) to match your setup.
+# `with:` inputs (and the `alexremn/ephemeractl@v1` ref) to match your setup.
 #
 # What it does:
 #   On every push to an open PR, ephemeractl queries OpenCost for the workloads
@@ -42,7 +42,7 @@ jobs:
     runs-on: [self-hosted]
     steps:
       - name: Post preview-environment cost
-        uses: your-org/ephemeractl@v1
+        uses: alexremn/ephemeractl@v1
         with:
           opencost-url: http://opencost.opencost.svc.cluster.local:9003
           pr-label-key: ephemeractl.dev/pr

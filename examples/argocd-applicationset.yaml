@@ -1,6 +1,6 @@
 # ephemeractl — example ArgoCD ApplicationSet (Pull Request generator, GitHub)
 #
-# What this does: for every open PR on your-org/your-app, ArgoCD renders one preview
+# What this does: for every open PR on alexremn/your-app, ArgoCD renders one preview
 # Application. ephemeractl then reads OpenCost for that PR's workloads and posts the
 # actual running cost on the PR.
 #
@@ -41,7 +41,7 @@ spec:
     - pullRequest:
         github:
           # GitHub owner and repository the PRs live in.
-          owner: your-org
+          owner: alexremn
           repo: your-app
           # Token for the GitHub API (read-only is fine: this generator only LISTS PRs).
           # Create the Secret separately; this just references it.
@@ -82,7 +82,7 @@ spec:
     spec:
       project: previews
       source:
-        repoURL: https://github.com/your-org/your-app.git
+        repoURL: https://github.com/alexremn/your-app.git
         targetRevision: "{{ .head_sha }}"
         path: deploy/chart
 
@@ -121,7 +121,7 @@ spec:
         #   commonLabels:
         #     ephemeractl.dev/pr: "{{ .number }}"
         #   images:
-        #     - your-org/your-app:{{ .head_short_sha }}
+        #     - alexremn/your-app:{{ .head_short_sha }}
         #
         # NOTE: kustomize commonLabels also becomes part of the selector, which is
         # immutable on existing Deployments. For ephemeral per-PR previews that are

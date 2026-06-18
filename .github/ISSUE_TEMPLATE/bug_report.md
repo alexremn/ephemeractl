@@ -17,7 +17,7 @@ are much slower to triage.
 
 ## Environment
 
-- **ephemeractl version / Action tag** (e.g. `your-org/ephemeractl@v1` or `@v1.2.3` or pinned SHA):
+- **ephemeractl version / Action tag** (e.g. `alexremn/ephemeractl@v1` or `@v1.2.3` or pinned SHA):
 - **Kubernetes version** (`kubectl version --short`):
 - **OpenCost version** (chart/image tag):
 - **Runner type**: self-hosted / GitHub-hosted
@@ -62,7 +62,7 @@ curl -sS "http://opencost.opencost.svc.cluster.local:9003/allocation?window=toda
 The relevant `with:` block from your workflow (redact tokens):
 
 ```yaml
-- uses: your-org/ephemeractl@v1
+- uses: alexremn/ephemeractl@v1
   with:
     opencost-url: ...
     pr-label-key: ...

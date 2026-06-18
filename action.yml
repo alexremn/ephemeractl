@@ -14,7 +14,7 @@
 
 name: ephemeractl
 description: Actual running cost of every PR's preview environment, posted on the PR.
-author: your-org
+author: alexremn
 
 branding:
   icon: dollar-sign
@@ -83,4 +83,4 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/your-org/ephemeractl:v1
+  image: docker://ghcr.io/alexremn/ephemeractl:v1

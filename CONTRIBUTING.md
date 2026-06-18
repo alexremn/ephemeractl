@@ -23,13 +23,13 @@ You need:
 Clone and build:
 
 ```bash
-git clone https://github.com/your-org/ephemeractl.git
+git clone https://github.com/alexremn/ephemeractl.git
 cd ephemeractl
 go build ./...
 go test ./...
 ```
 
-> Replace `your-org` with your fork's owner if you cloned a fork.
+> Replace `alexremn` with your fork's owner if you cloned a fork.
 
 ## Running the Action locally
 
