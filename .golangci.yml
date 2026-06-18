@@ -1,0 +1,21 @@
+# golangci-lint configuration. Pin the version in .github/workflows/ci.yml and
+# in CONTRIBUTING.md so local and CI runs use the same gate.
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    - misspell
+    - revive
+    - gosec
+
+issues:
+  # Respect inline // #nosec suppressions (e.g. $GITHUB_EVENT_PATH reads).
+  exclude-use-default: true

@@ -105,12 +105,12 @@ All commits must carry a Developer Certificate of Origin sign-off. Add it with `
 git commit -s -m "feat: add per-team cost breakdown"
 ```
 
-This appends a `Signed-off-by:` trailer asserting you have the right to submit the change under the project's Apache-2.0 license. CI checks for it.
+This appends a `Signed-off-by:` trailer asserting you have the right to submit the change under the project's Apache-2.0 license. Sign-off is required by policy and checked during review.
 
 ## Pull request process
 
 1. **Small, focused PRs.** One concern per PR; it gets reviewed and merged faster.
-2. **CI must be green** — `go build`, `go vet`, `golangci-lint`, and `go test -race -cover` all pass, coverage holds at ≥80% on `internal/*`, and the DCO check passes.
+2. **CI must be green** — `go build`, `go vet`, `golangci-lint`, and `go test -race -cover` all pass, and coverage holds at ≥80% on `internal/*`.
 3. Reference any related issue, and describe what you changed and how you verified it.
 4. For anything touching the cost mechanism, honesty note, or `action.yml` inputs/outputs, keep it consistent with [docs/SPEC-cost-attribution.md](docs/SPEC-cost-attribution.md) and [docs/USAGE.md](docs/USAGE.md) — these are the contract.
 

@@ -5,6 +5,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8.svg)](https://go.dev)
 [![status: v1](https://img.shields.io/badge/status-v1%20%C2%B7%20validate--first-brightgreen.svg)](docs/ROADMAP.md)
+[![CI](https://github.com/alexremn/ephemeractl/actions/workflows/ci.yml/badge.svg)](https://github.com/alexremn/ephemeractl/actions/workflows/ci.yml)
 
 ## What it does
 
@@ -38,7 +39,9 @@ Kubernetes preview environment, then posts and keeps updating a single sticky co
 ```
 
 The first line is the HTML marker `<!-- ephemeractl:cost-report -->`. ephemeractl finds it to
-update the existing comment in place instead of posting a new one on every push.
+update the existing comment in place instead of posting a new one on every push. The **By team**
+table appears only when you set `team-label` (see [Configuration](#configuration)); the quickstart
+below omits it and shows a single total.
 
 ## Why
 
@@ -92,6 +95,9 @@ jobs:
           pr-label-key: ephemeractl.dev/pr
           window: pr-open
 ```
+
+The default `github.token` is sufficient; `permissions: pull-requests: write` is required so the
+Action can create and update the sticky comment.
 
 Full setup, the ArgoCD label how-to, and the verify step are in
 [docs/USAGE.md](docs/USAGE.md); runnable files are in [examples/](examples/).
