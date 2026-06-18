@@ -5,6 +5,7 @@ package ghevent
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 )
@@ -71,11 +72,15 @@ type eventPayload struct {
 func Load() (Config, error) {
 	c := loadInputs()
 
+	if u, err := url.Parse(c.OpenCostURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return c, fmt.Errorf("opencost-url %q must be an http or https URL", c.OpenCostURL)
+	}
+
 	path := os.Getenv("GITHUB_EVENT_PATH")
 	if path == "" {
 		return c, fmt.Errorf("GITHUB_EVENT_PATH is not set; the Action must run on a pull_request event")
 	}
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 G703 -- path is $GITHUB_EVENT_PATH set by the Actions runner, not user input
 	if err != nil {
 		return c, fmt.Errorf("read event payload %q: %w", path, err)
 	}
@@ -90,5 +95,8 @@ func Load() (Config, error) {
 	c.Repo = ev.Repository.Name
 	c.PRNumber = ev.PullRequest.Number
 	c.PRCreatedAt = ev.PullRequest.CreatedAt
+	if c.PRNumber <= 0 {
+		return c, fmt.Errorf("event pull_request.number is %d; expected a positive PR number", c.PRNumber)
+	}
 	return c, nil
 }

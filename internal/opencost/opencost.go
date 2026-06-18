@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -96,6 +97,10 @@ func New(baseURL string) *Client {
 	}
 }
 
+// maxResponseBytes caps how much of the OpenCost response body is read into
+// memory, guarding against an unexpectedly large payload.
+const maxResponseBytes = 16 << 20 // 16 MiB
+
 type apiResponse struct {
 	Code int                     `json:"code"`
 	Data []map[string]Allocation `json:"data"`
@@ -139,7 +144,7 @@ func (c *Client) Fetch(ctx context.Context, q Query) (Result, error) {
 	}
 
 	var ar apiResponse
-	if err := json.NewDecoder(resp.Body).Decode(&ar); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, maxResponseBytes)).Decode(&ar); err != nil {
 		return Result{}, fmt.Errorf("decode OpenCost response: %w", err)
 	}
 	return reduce(ar), nil

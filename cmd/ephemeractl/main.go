@@ -27,10 +27,13 @@ func run() int {
 		return 1
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
 	window := resolveWindow(cfg, time.Now().UTC())
 	query := resolveQuery(cfg, window)
 
-	res, err := opencost.New(cfg.OpenCostURL).Fetch(context.Background(), query)
+	res, err := opencost.New(cfg.OpenCostURL).Fetch(ctx, query)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ephemeractl: %v\n", err)
 		return 1
@@ -54,7 +57,7 @@ func run() int {
 	})
 
 	url, err := comment.NewPoster(cfg.GitHubToken, cfg.Owner, cfg.Repo, cfg.PRNumber).
-		Upsert(context.Background(), render.Marker, body)
+		Upsert(ctx, render.Marker, body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ephemeractl: %v\n", err)
 		return 1
@@ -102,11 +105,16 @@ func writeOutputs(total float64, currency, commentURL string) error {
 	if path == "" {
 		return nil // not running under Actions; nothing to write
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600) // #nosec G304 G703 -- path is $GITHUB_OUTPUT set by the Actions runner
 	if err != nil {
 		return fmt.Errorf("open GITHUB_OUTPUT: %w", err)
 	}
-	defer f.Close()
-	_, err = fmt.Fprintf(f, "total-cost=%.2f\ncurrency=%s\ncomment-url=%s\n", total, currency, commentURL)
-	return err
+	if _, err := fmt.Fprintf(f, "total-cost=%.2f\ncurrency=%s\ncomment-url=%s\n", total, currency, commentURL); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("write GITHUB_OUTPUT: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("close GITHUB_OUTPUT: %w", err)
+	}
+	return nil
 }

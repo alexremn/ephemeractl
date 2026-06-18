@@ -73,11 +73,19 @@ func Markdown(r Report) string {
 			if name == "__unallocated__" {
 				name = "untagged"
 			}
-			fmt.Fprintf(&b, "| %s | %s %.2f |\n", name, r.Currency, g.Cost)
+			fmt.Fprintf(&b, "| %s | %s %.2f |\n", cell(name), r.Currency, g.Cost)
 		}
 		b.WriteString("\n")
 	}
 
 	b.WriteString(honesty + "\n")
 	return b.String()
+}
+
+// cell escapes a value so OpenCost-supplied text cannot break out of a markdown
+// table cell.
+func cell(s string) string {
+	s = strings.ReplaceAll(s, "|", "\\|")
+	s = strings.ReplaceAll(s, "\n", " ")
+	return s
 }

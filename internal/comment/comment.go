@@ -4,9 +4,11 @@ package comment
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/v66/github"
 )
@@ -25,7 +27,7 @@ type Poster struct {
 // is https://api.github.com (the client default), and on GitHub Enterprise
 // Server it is https://<host>/api/v3 — so the same Action works on GHES.
 func NewPoster(token, owner, repo string, number int) *Poster {
-	gh := github.NewClient(nil).WithAuthToken(token)
+	gh := github.NewClient(&http.Client{Timeout: 30 * time.Second}).WithAuthToken(token)
 	if api := os.Getenv("GITHUB_API_URL"); api != "" {
 		if u, err := url.Parse(ensureTrailingSlash(api)); err == nil {
 			gh.BaseURL = u
