@@ -105,7 +105,7 @@ func writeOutputs(total float64, currency, commentURL string) error {
 	if path == "" {
 		return nil // not running under Actions; nothing to write
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600) // #nosec G304 G703 -- path is $GITHUB_OUTPUT set by the Actions runner
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600) // #nosec G304 G703 -- path is $GITHUB_OUTPUT set by the Actions runner, not user input
 	if err != nil {
 		return fmt.Errorf("open GITHUB_OUTPUT: %w", err)
 	}

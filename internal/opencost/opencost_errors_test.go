@@ -8,7 +8,7 @@ import (
 )
 
 func TestFetchErrorsOnNon200(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer srv.Close()
@@ -20,7 +20,7 @@ func TestFetchErrorsOnNon200(t *testing.T) {
 }
 
 func TestFetchErrorsOnMalformedJSON(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{not valid json`))
 	}))
 	defer srv.Close()
@@ -31,8 +31,21 @@ func TestFetchErrorsOnMalformedJSON(t *testing.T) {
 	}
 }
 
+func TestFetchErrorsOnBodyCode(t *testing.T) {
+	// OpenCost reports application errors as HTTP 200 with a non-200 body code.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"code":400,"data":null}`))
+	}))
+	defer srv.Close()
+
+	_, err := New(srv.URL).Fetch(context.Background(), Query{Window: "1h", LabelKey: "k", LabelValue: "1"})
+	if err == nil {
+		t.Fatal("expected error on body-level code 400, got nil")
+	}
+}
+
 func TestFetchHandlesEmptyData(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"code":200,"data":[]}`))
 	}))
 	defer srv.Close()

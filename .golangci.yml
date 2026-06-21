@@ -1,21 +1,28 @@
-# golangci-lint configuration. Pin the version in .github/workflows/ci.yml and
-# in CONTRIBUTING.md so local and CI runs use the same gate.
+# golangci-lint v2 configuration. Keep the version in .github/workflows/ci.yml
+# and in CONTRIBUTING.md in sync so local and CI runs use the same gate.
+version: "2"
+
 run:
   timeout: 5m
 
 linters:
   enable:
-    - gofmt
-    - goimports
-    - govet
     - errcheck
+    - govet
     - staticcheck
     - ineffassign
     - unused
     - misspell
     - revive
     - gosec
+  exclusions:
+    # Respect inline // #nosec suppressions and the standard false-positive sets.
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-issues:
-  # Respect inline // #nosec suppressions (e.g. $GITHUB_EVENT_PATH reads).
-  exclude-use-default: true
+formatters:
+  enable:
+    - gofmt
+    - goimports

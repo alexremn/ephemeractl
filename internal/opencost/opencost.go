@@ -147,6 +147,11 @@ func (c *Client) Fetch(ctx context.Context, q Query) (Result, error) {
 	if err := json.NewDecoder(io.LimitReader(resp.Body, maxResponseBytes)).Decode(&ar); err != nil {
 		return Result{}, fmt.Errorf("decode OpenCost response: %w", err)
 	}
+	// OpenCost wraps errors in an HTTP 200 with a non-200 body-level code; an
+	// absent code (0) means the field was omitted on a successful response.
+	if ar.Code != 0 && ar.Code != http.StatusOK {
+		return Result{}, fmt.Errorf("OpenCost returned body code %d", ar.Code)
+	}
 	return reduce(ar), nil
 }
 

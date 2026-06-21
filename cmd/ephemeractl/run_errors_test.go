@@ -33,7 +33,7 @@ func TestRunFailsWhenEventMissing(t *testing.T) {
 }
 
 func TestRunFailsWhenOpenCostErrors(t *testing.T) {
-	oc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	oc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer oc.Close()
@@ -48,7 +48,7 @@ func TestRunFailsWhenOpenCostErrors(t *testing.T) {
 }
 
 func TestRunFailsWhenCommentErrors(t *testing.T) {
-	oc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	oc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"code":200,"data":[{"r":{"name":"r","cpuCost":1.0}}]}`))
 	}))
 	defer oc.Close()

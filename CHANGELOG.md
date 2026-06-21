@@ -12,7 +12,7 @@ Released versions are also available as auto-generated notes on the
 ## [1.0.0] - 2026-06-18
 
 ### Added
-- Initial release: the `actual-cost-on-PR` GitHub Action. On a pull request it
+- Initial release: the ephemeractl GitHub Action. On a pull request it
   queries OpenCost for the actual running cost so far of that PR's Kubernetes
   preview environment and upserts a sticky cost comment, with an optional
   per-team breakdown.

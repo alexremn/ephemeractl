@@ -74,7 +74,7 @@ Leave `INPUT_GITHUB-TOKEN` unset (or use a read-only token) if you only want to 
 
 - **Formatting:** `gofmt` — run `gofmt -l .` and ensure it reports nothing. CI rejects unformatted code.
 - **Vetting:** `go vet ./...` must pass.
-- **Linting:** `golangci-lint run` must pass. Install it from <https://golangci-lint.run> and run it before pushing; CI runs the same.
+- **Linting:** `golangci-lint run` must pass. Install **golangci-lint v2** (v2.12.2, the version CI pins) from <https://golangci-lint.run> and run it before pushing; CI runs the same.
 
 Keep changes small and idiomatic Go. Follow the package boundaries in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (`internal/ghevent`, `internal/opencost`, `internal/render`, `internal/comment`, `cmd/ephemeractl`); don't reach across them or fold unrelated concerns into one package.
 
