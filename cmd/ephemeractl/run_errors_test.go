@@ -70,3 +70,31 @@ func TestRunFailsWhenCommentErrors(t *testing.T) {
 		t.Errorf("run() = %d, want 1 when the comment API errors", code)
 	}
 }
+
+// If the outputs cannot be written the step must fail loudly rather than
+// report success with total-cost/comment-url missing.
+func TestRunFailsWhenOutputUnwritable(t *testing.T) {
+	oc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"code":200,"data":[{"r":{"name":"r","cpuCost":1.0}}]}`))
+	}))
+	defer oc.Close()
+	gh := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, _ = w.Write([]byte(`[]`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id":1,"html_url":"https://example.test/c1"}`))
+	}))
+	defer gh.Close()
+
+	t.Setenv("GITHUB_EVENT_PATH", writeEvent(t, 3))
+	t.Setenv("INPUT_OPENCOST-URL", oc.URL)
+	t.Setenv("GITHUB_API_URL", gh.URL)
+	t.Setenv("INPUT_GITHUB-TOKEN", "tok")
+	// A missing parent dir fails the open for any uid (tests may run as root).
+	t.Setenv("GITHUB_OUTPUT", filepath.Join(t.TempDir(), "missing", "out"))
+
+	if code := run(); code != 1 {
+		t.Errorf("run() = %d, want 1 when GITHUB_OUTPUT cannot be written", code)
+	}
+}

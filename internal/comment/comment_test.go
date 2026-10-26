@@ -127,3 +127,41 @@ func TestSetBaseURLRejectsInvalidURL(t *testing.T) {
 		t.Fatal("expected error for invalid URL, got nil")
 	}
 }
+
+// A busy PR can have more than one page of comments; the marker comment must
+// still be found and edited, never duplicated.
+func TestUpsertFindsMarkerOnLaterPage(t *testing.T) {
+	var edited, created bool
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Query().Get("page") == "":
+			w.Header().Set("Link", `<`+srv.URL+r.URL.Path+`?page=2&per_page=100>; rel="next"`)
+			_, _ = w.Write([]byte(`[{"id":1,"body":"unrelated"}]`))
+		case r.Method == http.MethodGet && r.URL.Query().Get("page") == "2":
+			body, _ := json.Marshal([]map[string]any{{"id": 9, "body": marker + "\nold"}})
+			_, _ = w.Write(body)
+		case r.Method == http.MethodPatch && strings.HasSuffix(r.URL.Path, "/issues/comments/9"):
+			edited = true
+			_, _ = w.Write([]byte(`{"id":9,"html_url":"https://github.com/acme/checkout/pull/482#issuecomment-9"}`))
+		case r.Method == http.MethodPost:
+			created = true
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"id":10}`))
+		default:
+			t.Errorf("unexpected %s %s?%s", r.Method, r.URL.Path, r.URL.RawQuery)
+		}
+	}))
+	defer srv.Close()
+
+	url, err := newTestPoster(t, srv.URL).Upsert(context.Background(), marker, marker+"\nnew")
+	if err != nil {
+		t.Fatalf("Upsert: %v", err)
+	}
+	if !edited || created {
+		t.Errorf("edited=%v created=%v, want the page-2 marker comment edited and nothing created", edited, created)
+	}
+	if !strings.Contains(url, "issuecomment-9") {
+		t.Errorf("comment url = %q", url)
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -111,5 +112,25 @@ func TestFetchNamespaceSelectorAndIdle(t *testing.T) {
 	}
 	if gotQuery.Get("includeIdle") != "true" || gotQuery.Get("shareIdle") != "true" {
 		t.Errorf("idle flags wrong: %v", gotQuery)
+	}
+}
+
+func TestReduceSkipsIdleAndOrdersTiesByName(t *testing.T) {
+	res := reduce(apiResponse{Data: []map[string]Allocation{{
+		idleKey: {CPUCost: 100},
+		"zeta":  {CPUCost: 1},
+		"alpha": {RAMCost: 1},
+		"big":   {CPUCost: 2},
+	}}})
+
+	if res.Total != 4 || res.Components.CPU != 3 || res.Components.RAM != 1 {
+		t.Errorf("idle bucket leaked into totals: total=%v components=%+v", res.Total, res.Components)
+	}
+	var names []string
+	for _, g := range res.Groups {
+		names = append(names, g.Name)
+	}
+	if got := strings.Join(names, ","); got != "big,alpha,zeta" {
+		t.Errorf("group order = %s, want big,alpha,zeta (cost desc, then name)", got)
 	}
 }
