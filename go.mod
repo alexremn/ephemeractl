@@ -1,6 +1,6 @@
 module github.com/alexremn/ephemeractl
 
-go 1.22
+go 1.27
 
 require github.com/google/go-github/v66 v66.0.0
 
