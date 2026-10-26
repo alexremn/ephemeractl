@@ -38,9 +38,10 @@ jobs:
         run: |
           REF="${{ github.ref_name }}"          # e.g. v1.2.0 or v1.2.0-rc1
           MAJOR="${REF%%.*}"                     # v1 — moving major tag, matches action.yml's :v1 pin
-          TAGS="${{ env.IMAGE }}:${REF},${{ env.IMAGE }}:${MAJOR}"
-          # :latest only on non-prerelease tags (no hyphen), per the pinning guidance in SECURITY.md
-          if [[ "$REF" != *-* ]]; then TAGS="${TAGS},${{ env.IMAGE }}:latest"; fi
+          TAGS="${{ env.IMAGE }}:${REF}"
+          # Moving :vN and :latest only on non-prerelease tags (no hyphen), so an RC
+          # never reaches @v1 users; per the pinning guidance in SECURITY.md
+          if [[ "$REF" != *-* ]]; then TAGS="${TAGS},${{ env.IMAGE }}:${MAJOR},${{ env.IMAGE }}:latest"; fi
           echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
       - name: Build & push image
@@ -73,6 +74,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: release-notes.md
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
 
       # Make `uses: alexremn/ephemeractl@v1` resolve by moving the major git tag
       # to this release commit. Skipped for pre-releases (e.g. v1.2.0-rc1).
