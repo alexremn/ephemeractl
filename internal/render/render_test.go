@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/alexremn/ephemeractl/internal/opencost"
@@ -48,6 +49,21 @@ func TestMarkdownReport(t *testing.T) {
 		t.Errorf("output must start with the sticky marker")
 	}
 	checkGolden(t, "report.golden", out)
+}
+
+func TestMarkdownEscapesTeamNames(t *testing.T) {
+	out := Markdown(Report{
+		PRNumber: 1, Total: 3, Currency: "USD", Window: "7d", IdleMode: "used-only",
+		Groups: []opencost.Group{
+			{Name: "a|b\nc\rd", Cost: 2},
+			{Name: "__unallocated__", Cost: 1},
+		},
+	})
+	for _, want := range []string{"| a\\|b c d | USD 2.00 |\n", "| untagged | USD 1.00 |\n"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing row %q:\n%s", want, out)
+		}
+	}
 }
 
 func TestMarkdownNoData(t *testing.T) {

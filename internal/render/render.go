@@ -87,5 +87,6 @@ func Markdown(r Report) string {
 func cell(s string) string {
 	s = strings.ReplaceAll(s, "|", "\\|")
 	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", " ") // a lone CR is a line ending in CommonMark
 	return s
 }
