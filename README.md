@@ -3,7 +3,7 @@
 > Actual running cost of every PR's preview environment, posted on the PR.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8.svg)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go-1.27%2B-00ADD8.svg)](https://go.dev)
 [![status: v1](https://img.shields.io/badge/status-v1%20%C2%B7%20validate--first-brightgreen.svg)](docs/ROADMAP.md)
 [![CI](https://github.com/alexremn/ephemeractl/actions/workflows/ci.yml/badge.svg)](https://github.com/alexremn/ephemeractl/actions/workflows/ci.yml)
 

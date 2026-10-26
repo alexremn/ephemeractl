@@ -17,10 +17,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Test on the Go the release image is built with, so a Dependabot bump of
+      # the Dockerfile's golang base is validated here before it ships.
+      - name: Read Go version from Dockerfile
+        id: go
+        run: |
+          v=$(sed -n 's/^FROM golang:\([0-9.]*\)-alpine.*/\1/p' Dockerfile)
+          test -n "$v" || { echo "::error::no golang:<version>-alpine base in Dockerfile"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.22"
+          go-version: ${{ steps.go.outputs.version }}
           check-latest: true
 
       - name: Build
@@ -32,7 +41,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.12.2
+          version: v2.15.0
 
       - name: Test (race + coverage)
         run: go test -race -coverprofile=coverage.out ./...
@@ -43,3 +52,14 @@ jobs:
           name: coverage
           path: coverage.out
           if-no-files-found: ignore
+
+      # Build the action image so base-image bumps are validated before merge.
+      # GitHub requires Docker actions to run as root: a non-root user cannot
+      # write the runner-owned $GITHUB_OUTPUT file, failing every run.
+      - name: Build & smoke-test image
+        run: |
+          docker build -t ephemeractl:ci .
+          user=$(docker image inspect -f '{{.Config.User}}' ephemeractl:ci)
+          case "$user" in ""|0|root|0:0|root:root) ;; *) echo "::error::image runs as '$user'; Docker actions must run as root"; exit 1 ;; esac
+          out=$(docker run --rm ephemeractl:ci 2>&1) || true
+          echo "$out" | grep -q 'GITHUB_EVENT_PATH is not set' || { echo "::error::image did not run the binary: $out"; exit 1; }

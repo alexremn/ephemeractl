@@ -16,7 +16,7 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 You need:
 
-- **Go 1.22+** (`go version` to check)
+- **Go 1.27+** (`go version` to check)
 - **git**
 - Optional, for the "run locally" section: `kubectl` with access to a cluster running OpenCost, and `golangci-lint` for the full lint gate.
 
@@ -74,7 +74,7 @@ Leave `INPUT_GITHUB-TOKEN` unset (or use a read-only token) if you only want to 
 
 - **Formatting:** `gofmt` — run `gofmt -l .` and ensure it reports nothing. CI rejects unformatted code.
 - **Vetting:** `go vet ./...` must pass.
-- **Linting:** `golangci-lint run` must pass. Install **golangci-lint v2** (v2.12.2, the version CI pins) from <https://golangci-lint.run> and run it before pushing; CI runs the same.
+- **Linting:** `golangci-lint run` must pass. Install **golangci-lint v2** (v2.15.0, the version CI pins) from <https://golangci-lint.run> and run it before pushing; CI runs the same.
 
 Keep changes small and idiomatic Go. Follow the package boundaries in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (`internal/ghevent`, `internal/opencost`, `internal/render`, `internal/comment`, `cmd/ephemeractl`); don't reach across them or fold unrelated concerns into one package.
 
